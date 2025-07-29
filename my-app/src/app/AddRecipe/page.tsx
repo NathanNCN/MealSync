@@ -2,8 +2,38 @@
 
 import Nav from '../Components/Nav';
 import { FaPlus } from 'react-icons/fa';
+import Ingredients from '../Components/FormInputs/Ingredients';
+import Steps from '../Components/FormInputs/Steps';
+import { useState } from 'react';
 
 export default function AddRecipe() {
+    const [ingredients, setIngredients] = useState<number[]>([0]);
+    const [steps, setSteps] = useState<number[]>([0]);
+    
+    const handleAddIngredient = () => {
+        const lastIndex = ingredients[ingredients.length - 1];
+        setIngredients(prev => [...prev, lastIndex + 1]);
+    }
+    
+    const handleRemoveIngredient = (indexToRemove: number) => {
+        if (ingredients.length > 1) {
+            setIngredients(prev => prev.filter((index) => index !== indexToRemove));
+        }
+    }
+
+    const handleRemoveStep = (indexToRemove: number) => {
+        if (steps.length > 1) {
+            setSteps(prev => prev.filter((index) => index !== indexToRemove));
+        }
+    }
+
+   
+    const handleAddStep = () => {
+        const lastIndex = steps[steps.length - 1];
+        setSteps(prev => [...prev, lastIndex + 1]);
+        
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Nav/>
@@ -37,29 +67,16 @@ export default function AddRecipe() {
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-2xl font-bold mb-4">Ingredients</h2>
                     <div className="space-y-3">
-                        <div className="flex gap-2">
-                            <input 
-                                type="text"
-                                placeholder="Ingredient"
-                                className="flex-1 p-2 border rounded-lg"
+                        {ingredients.map((value) => (
+                            <Ingredients 
+                                key={value}
+                                onRemove={() => handleRemoveIngredient(value)}
                             />
-                            <input 
-                                type="text"
-                                placeholder="Amount"
-                                className="w-24 p-2 border rounded-lg"
-                            />
-                            <select className="w-28 p-2 border rounded-lg">
-                                <option value="">Unit</option>
-                                <option value="g">grams</option>
-                                <option value="kg">kg</option>
-                                <option value="ml">ml</option>
-                                <option value="l">liters</option>
-                                <option value="tsp">tsp</option>
-                                <option value="tbsp">tbsp</option>
-                                <option value="cup">cup</option>
-                            </select>
-                        </div>
-                        <button className="flex items-center gap-2 text-green-600 hover:text-green-700">
+                        ))}
+                        <button 
+                            onClick={handleAddIngredient}
+                            className="flex items-center gap-2 text-green-600 hover:text-green-700"
+                        >
                             <FaPlus size={12} />
                             <span>Add Ingredient</span>
                         </button>
@@ -70,30 +87,18 @@ export default function AddRecipe() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-2xl font-bold mb-4">Steps</h2>
                     <div className="space-y-4">
-                        <div className="border rounded-lg p-4">
-                            <p className="font-semibold mb-3">Step 1</p>
-                            <div className="space-y-3">
-                                {/* Image Upload Box */}
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-green-500 transition-colors">
-                                    <input 
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        id="step-image"
-                                    />
-                                    <label htmlFor="step-image" className="cursor-pointer">
-                                        <FaPlus size={24} color="#9CA3AF" />
-                                        <p className="text-sm text-gray-500">Add Image (Optional)</p>
-                                    </label>
-                                </div>
-                                <textarea 
-                                    placeholder="Step description"
-                                    className="w-full p-2 border rounded-lg"
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
-                        <button className="flex items-center gap-2 text-green-600 hover:text-green-700">
+                        {steps.map((value,index) => (
+                            <Steps
+                                key={value}
+                                stepIndex={index+1}
+                                onRemove={() => handleRemoveStep(value)}
+                            />
+                        ))}
+
+                        <button 
+                            onClick={handleAddStep}
+                            className="flex items-center gap-2 text-green-600 hover:text-green-700"
+                        >
                             <FaPlus size={12} />
                             <span>Add Step</span>
                         </button>
