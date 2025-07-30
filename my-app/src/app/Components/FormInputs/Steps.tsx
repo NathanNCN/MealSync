@@ -24,6 +24,7 @@ export default function Steps({ stepIndex, onRemove}: StepsProps) {
                         accept="image/*"
                         className="hidden"
                         id="step-image"
+                    
                     />
                     <label htmlFor="step-image" className="cursor-pointer mt-10">
                         <FaPlus size={24} color="#9CA3AF" />
@@ -35,6 +36,7 @@ export default function Steps({ stepIndex, onRemove}: StepsProps) {
                     placeholder="Step description"
                     className="w-full p-2 border rounded-lg"
                     rows={3}
+                    required
                 />
             </div>
         </div>

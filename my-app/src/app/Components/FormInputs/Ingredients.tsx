@@ -12,14 +12,18 @@ export default function Ingredients({ onRemove}: IngredientsProps) {
                 type="text"
                 placeholder="Ingredient"
                 className="flex-1 p-2 border rounded-lg"
+                required
             />
             <input 
                 type="text"
                 placeholder="Amount"
                 className="w-24 p-2 border rounded-lg"
+                required
             />
-            <select className="w-28 p-2 border rounded-lg">
-                <option value="">Unit</option>
+            <select className="w-28 p-2 border rounded-lg"
+                required
+            >
+                <option value="" disabled selected>Unit</option>
                 <option value="g">grams</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>

@@ -6,9 +6,34 @@ import Ingredients from '../Components/FormInputs/Ingredients';
 import Steps from '../Components/FormInputs/Steps';
 import { useState } from 'react';
 
+
+type Ingredient = {
+    name: string,
+    amount: number,
+    unit: "g" | "kg" | "ml" | "l" | "tsp" | "tbsp" | "cup",
+}
+
+type Step = {
+    description: string,
+    image: string,
+}
+
+type Recipe = {
+    name: string,
+    time: string,
+    difficulty: "Easy" | "Medium" | "Hard",
+    coverImage: string,
+    ingredients: Ingredient[],
+    steps: Step[],
+}
+
+
 export default function AddRecipe() {
     const [ingredients, setIngredients] = useState<number[]>([0]);
     const [steps, setSteps] = useState<number[]>([0]);
+
+
+    const [recipe, setRecipe] = useState<Recipe>({
     
     const handleAddIngredient = () => {
         const lastIndex = ingredients[ingredients.length - 1];
@@ -45,6 +70,7 @@ export default function AddRecipe() {
                         type="text"
                         placeholder="Recipe Name"
                         className="w-full p-2 border rounded-lg mb-4"
+                        required
                     />
                     
                     {/* Time and Difficulty */}
@@ -53,16 +79,35 @@ export default function AddRecipe() {
                             type="text"
                             placeholder="Time (e.g., 30 mins)"
                             className="p-2 border rounded-lg"
+                            required
                         />
-                        <select className="p-2 border rounded-lg">
-                            <option value="">Select Difficulty</option>
+                        <select className="p-2 border rounded-lg" required>
+                            <option value="" disabled selected>Select Difficulty</option>
                             <option value="Easy">Easy</option>
                             <option value="Medium">Medium</option>
                             <option value="Hard">Hard</option>
                         </select>
                     </div>
                 </div>
-
+                {/* Cover Image Section */}
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 className="text-2xl font-bold mb-4">Cover Image</h2>
+                    <div className="flex flex-col justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors">
+                        <input 
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="cover-image"
+                            required
+                        />
+                        <label htmlFor="cover-image" className="cursor-pointer">
+                            <div className="mb-2">
+                                <FaPlus size={32} color="#9CA3AF" />
+                            </div>
+                            <p className="text-sm text-gray-500">Add Cover Image</p>
+                        </label>
+                    </div>
+                </div>
                 {/* Ingredients Section */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 className="text-2xl font-bold mb-4">Ingredients</h2>
