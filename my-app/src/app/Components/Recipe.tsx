@@ -3,6 +3,7 @@
 import { FaClock } from 'react-icons/fa';
 import { IoMdSpeedometer } from 'react-icons/io';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 
 type RecipeProps = {
@@ -16,6 +17,8 @@ export default function Recipe({name, image, time, difficulty}: RecipeProps) {
 
     const [difficultyColor, setDifficultyColor] = useState('');
 
+    const router = useRouter();
+
     useEffect(() => {
         if (difficulty == 'Easy') {
             setDifficultyColor('text-green-500');
@@ -26,31 +29,38 @@ export default function Recipe({name, image, time, difficulty}: RecipeProps) {
         }
     }, [difficulty]);
 
+    const showRecipe = () => router.push('/ViewRecipe');
+
     return (
-        <div className='bg-white shadow-md rounded-lg overflow-hidden h-[300px] w-[300px] hover:shadow-lg transition-shadow'>
+        <button className='group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-[300px] w-full sm:w-[300px]'
+            onClick={showRecipe}>
             {/* Recipe Name */}
-            <h1 className='text-xl font-semibold p-3 text-gray-800'>{name}</h1>
-            
-            {/* Image Container */}
-            <div className='w-full h-[160px] bg-gray-200'>
-                <img 
-                    src='#'
-                    alt="Recipe"
-                    className='w-full h-full object-cover'
-                />
+            <div className='relative'>
+                {/* Image Container */}
+                <div className='w-full h-[200px]'>
+                    <img 
+                        src={image}
+                        alt={name}
+                        className='w-full h-full object-cover transition-transform duration-300 '
+                    />
+                    {/* Overlay gradient for text readability */}
+                    <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent'></div>
+                </div>
+                {/* Title overlaid on image */}
+                <h1 className='absolute bottom-0 left-0 right-0 p-4 text-xl font-semibold text-white'>{name}</h1>
             </div>
             
             {/* Info Footer */}
-            <div className='p-3 flex justify-between items-center'>
+            <div className='p-4 flex justify-between items-center bg-white'>
                 <div className='flex items-center gap-2 text-gray-600'>
-                    <FaClock />
-                    <span>{time}</span>
+                    <FaClock size={16} color="#9CA3AF" />
+                    <span className="text-sm font-medium">{time}</span>
                 </div>
                 <div className={`flex items-center gap-2 ${difficultyColor}`}>
-                    <IoMdSpeedometer />
-                    <span>{difficulty}</span>
+                    <IoMdSpeedometer size={18} />
+                    <span className="text-sm font-medium">{difficulty}</span>
                 </div>
             </div>
-        </div>
+        </button>
     )
 }

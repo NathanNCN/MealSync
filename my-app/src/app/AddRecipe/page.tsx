@@ -7,6 +7,8 @@ import Steps from '../Components/FormInputs/Steps';
 import { useState } from 'react';
 import {createClient} from '@supabase/supabase-js';
 import {useRouter} from 'next/navigation';
+import { getCals } from '../api/nutrition';
+import { error } from 'console';
 
 
 type Ingredient = {
@@ -94,7 +96,8 @@ export default function AddRecipe() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
         const {name, value} = e.target;
-        if (name == `image` && e.target instanceof HTMLInputElement && e.target.files) {
+        if (name == `coverImage` && e.target instanceof HTMLInputElement && e.target.files) {
+            console.log('IMAGE IS ADDED')
             const file = e.target.files[0];
 
             setImagePreview(URL.createObjectURL(file));
@@ -111,6 +114,7 @@ export default function AddRecipe() {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! 
     );
+
 
 
     const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
@@ -163,6 +167,28 @@ export default function AddRecipe() {
             const recipeId = recipeData.id;
             console.log('New recipe ID:', recipeId);
 
+            //Now going to insert image into bucket
+            if (!recipe.coverImage || !recipe.coverImage.name) {
+                console.error('Cover image or filename is missing');
+                return;
+            }
+
+            const fileExtension = recipe.coverImage.name.split('.').pop()
+            const fileName = `${user.data.user.id}/${recipeId}/${Date.now()}.${fileExtension}`
+
+            console.log('Uploading file with path:', fileName)
+
+            //insert image to database
+            const { error: uploadError} = await supaBase.storage.from('coverimages').upload(fileName, recipe.coverImage)
+            
+            if (uploadError){
+                console.log('Error uploading cover image', uploadError)
+                return
+            }
+
+        
+
+
             console.log("ingredients", ingredients)
 
             // Insert each ingredient separately
@@ -185,6 +211,30 @@ export default function AddRecipe() {
             }
 
             console.log('Successfully inserted recipe and all ingredients');
+            const nutrition = await getCals(validIngredients)
+            console.log(`FINAL`, nutrition)
+
+            const {error: nutritionError} = await supaBase
+                .from('nutrition')
+                .insert({
+                    recipe_id: recipeId,
+                    calories: nutrition.cals,
+                    protein: nutrition.protien,
+                    fat: nutrition.carbs,
+                    carbs: nutrition.carbs
+                })
+
+            if (nutritionError){
+                console.log("Failed to insert cals", nutritionError)
+
+            }
+
+            // Now save steps to table and images to buckets
+
+            
+
+
+            
 
         } catch (error) {
             console.error('Error during submission:', error);
@@ -194,113 +244,164 @@ export default function AddRecipe() {
     const router = useRouter();
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
             <Nav/>
-            <form className="container mx-auto px-4 py-8 max-w-2xl" onSubmit={handleSubmit}>
-                {/* Recipe Name Section */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h1 className="text-3xl font-bold mb-4">Recipe</h1>
-                    <input 
-                        type="text"
-                        name="name"
-                        placeholder="Recipe Name"
-                        className="w-full p-2 border rounded-lg mb-4"
-                        onChange={handleChange}
-                        required
-                    />
-                    
-                    {/* Time and Difficulty */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <input 
-                            type="text"
-                            name="time"
-                            onChange={handleChange}
-                            placeholder="Time (e.g., 30 mins)"
-                            className="p-2 border rounded-lg"
-                            required
-                        />
-                        <select 
-                            className="p-2 border rounded-lg" name="difficulty" 
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="Easy">Easy</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Hard">Hard</option>
-                        </select>
-                    </div>
-                </div>
-                {/* Cover Image Section */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-bold mb-4">Cover Image</h2>
-                    <div className="flex flex-col justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors">
-                        <input 
-                            type="file"
-                            name="coverImage"
-                            accept="image/*"
-                            className="sr-only absolute w-[1px] h-[1px] p-0 -m-[1px] overflow-hidden clip-0 border-0"
-                            id="cover-image"
-                            onChange={handleChange}
-                            required
-                        />
-                        <label htmlFor="cover-image" className="cursor-pointer">
-                            <div className="mb-2">
-                                <FaPlus size={32} color="#9CA3AF" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                    {/* Recipe Name Section */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md">
+                        <h1 className="text-3xl font-bold mb-6 text-gray-800">Create New Recipe</h1>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="recipe-name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Recipe Name
+                                </label>
+                                <input 
+                                    id="recipe-name"
+                                    type="text"
+                                    name="name"
+                                    placeholder="Enter recipe name"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
-                            <p className="text-sm text-gray-500">Add Cover Image</p>
-                        </label>
+                            
+                            {/* Time and Difficulty */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="cooking-time" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Cooking Time
+                                    </label>
+                                    <input 
+                                        id="cooking-time"
+                                        type="text"
+                                        name="time"
+                                        onChange={handleChange}
+                                        placeholder="e.g., 30 mins"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Difficulty Level
+                                    </label>
+                                    <select 
+                                        id="difficulty"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white"
+                                        name="difficulty" 
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="Easy">Easy</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Hard">Hard</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                {/* Ingredients Section */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-bold mb-4">Ingredients</h2>
-                    <div className="space-y-3">
-                        {ingredients.map((value) => (
-                            <Ingredients 
-                                key={value}
-                                index={value}
-                                onRemove={() => handleRemoveIngredient(value)}
-                                onIngredientChange={handleIngredientChange}
-                            />
-                        ))}
-                        <button 
-                            onClick={handleAddIngredient}
-                            className="flex items-center gap-2 text-green-600 hover:text-green-700"
+
+                    {/* Cover Image Section */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800">Cover Image</h2>
+                        <div 
+                            className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-all hover:border-green-500 hover:bg-green-50"
                         >
-                            <FaPlus size={12} />
-                            <span>Add Ingredient</span>
+                            <input 
+                                type="file"
+                                name="coverImage"
+                                accept="image/*"
+                                className="sr-only"
+                                id="cover-image"
+                                onChange={handleChange}
+                                required
+                            />
+                            <label 
+                                htmlFor="cover-image" 
+                                className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                            >
+                                <div className="rounded-full bg-green-100 p-3">
+                                    <FaPlus size={24} color="#059669" />
+                                </div>
+                                <div>
+                                    <p className="text-base font-medium text-gray-700">Add Cover Image</p>
+                                    <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
+                                </div>
+                            </label>
+                            {imagePreview && (
+                                <div className="mt-4">
+                                    <img 
+                                        src={imagePreview} 
+                                        alt="Preview" 
+                                        className="max-h-48 mx-auto rounded-lg shadow-sm"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Ingredients Section */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold text-gray-800">Ingredients</h2>
+                            <button 
+                                type="button"
+                                onClick={handleAddIngredient}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-green-600 bg-green-100 rounded-lg hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all gap-2"
+                            >
+                                <FaPlus size={16} />
+                                Add Ingredient
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {ingredients.map((value) => (
+                                <Ingredients 
+                                    key={value}
+                                    index={value}
+                                    onRemove={() => handleRemoveIngredient(value)}
+                                    onIngredientChange={handleIngredientChange}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Steps Section */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 transition-all hover:shadow-md">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold text-gray-800">Steps</h2>
+                            <button 
+                                type="button"
+                                onClick={handleAddStep}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-green-600 bg-green-100 rounded-lg hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all gap-2"
+                            >
+                                <FaPlus size={16} />
+                                Add Step
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {steps.map((value, index) => (
+                                <Steps
+                                    key={value}
+                                    stepIndex={index+1}
+                                    onRemove={() => handleRemoveStep(value)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex justify-center pt-6 pb-12">
+                        <button 
+                            type="submit" 
+                            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-green-600 rounded-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:scale-105"
+                        >
+                            Save Recipe
                         </button>
                     </div>
-                </div>
-
-                {/* Steps Section */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold mb-4">Steps</h2>
-                    <div className="space-y-4">
-                        {steps.map((value,index) => (
-                            <Steps
-                                key={value}
-                                stepIndex={index+1}
-                                onRemove={() => handleRemoveStep(value)}
-                            />
-                        ))}
-
-                        <button 
-                            onClick={handleAddStep}
-                            className="flex items-center gap-2 text-green-600 hover:text-green-700"
-                        >
-                            <FaPlus size={12} />
-                            <span>Add Step</span>
-                        </button>
-                    </div>
-                </div>
-                <div className="flex align-center justify-center mt-10 font-bold text-white">
-                    <button type={`submit`} className="bg-green-600 text-center p-5 justify-center rounded-md">
-                        Save Recipe
-                    </button>
-                </div>
-                
-            </form>
+                </form>
+            </div>
         </div>
     )
 }

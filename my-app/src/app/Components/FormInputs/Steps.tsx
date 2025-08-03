@@ -10,7 +10,7 @@ type StepsProps = {
 
 type Step = {
     directions: string,
-    image?: File,
+    image?: File | null,
 }
 
 export default function Steps({ stepIndex, onRemove}: StepsProps) {
@@ -19,17 +19,19 @@ export default function Steps({ stepIndex, onRemove}: StepsProps) {
 
     const [currentStep, setCurrentStep] =  useState<Step>({
         directions: ``,
+        image: null,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) =>{
         const {name, value} = e.target;
         if (name == `image` && e.target instanceof HTMLInputElement && e.target.files) {
+            console.log('ADDING IMAGE')
             const file = e.target.files[0];
 
             setImagePreview(URL.createObjectURL(file));
             setCurrentStep(prev => ({ ...prev, image: file }));
         } else{
-            setCurrentStep( (prev)=>({...prev, [name]:value}))
+            setCurrentStep( (prev)=>({...prev, [name]: value}))
 
         }
     }
