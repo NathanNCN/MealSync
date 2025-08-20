@@ -122,13 +122,14 @@ export default function RecipeContainer() {
                     </div>
                     <span className="text-gray-500 group-hover:text-green-600 font-medium transition-colors">Add New Recipe</span>
                 </button>
-                {userRecipes.map((recipe, index) => (
+                {userRecipes.map((recipe) => (
                     <Recipe 
                         key={recipe.id} 
                         name={recipe.name} 
                         image={recipe.coverImage} 
                         time={recipe.time} 
                         difficulty={recipe.difficulty}
+                        recipe_id={recipe.id}
                     />
                 ))}
             </div>

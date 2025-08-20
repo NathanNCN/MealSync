@@ -11,9 +11,10 @@ type RecipeProps = {
     image: string;
     time: string;
     difficulty: string;
+    recipe_id: string
 }
 
-export default function Recipe({name, image, time, difficulty}: RecipeProps) {
+export default function Recipe({name, image, time, difficulty, recipe_id}: RecipeProps) {
 
     const [difficultyColor, setDifficultyColor] = useState('');
 
@@ -29,7 +30,7 @@ export default function Recipe({name, image, time, difficulty}: RecipeProps) {
         }
     }, [difficulty]);
 
-    const showRecipe = () => router.push('/ViewRecipe');
+    const showRecipe = () => router.push(`/ViewRecipe?id=${recipe_id}`);
 
     return (
         <button className='group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-[300px] w-full sm:w-[300px]'

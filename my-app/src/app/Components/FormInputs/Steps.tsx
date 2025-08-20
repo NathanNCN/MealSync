@@ -6,6 +6,7 @@ import { useState } from 'react';
 type StepsProps = {
     stepIndex: number;
     onRemove: () => void;
+    onStepChange: (step: Step) => void;
 }
 
 type Step = {
@@ -13,7 +14,7 @@ type Step = {
     image?: File | null,
 }
 
-export default function Steps({ stepIndex, onRemove}: StepsProps) {
+export default function Steps({ stepIndex, onRemove, onStepChange}: StepsProps) {
 
     const [imagePreview, setImagePreview] = useState<string>(``);
 
@@ -29,10 +30,13 @@ export default function Steps({ stepIndex, onRemove}: StepsProps) {
             const file = e.target.files[0];
 
             setImagePreview(URL.createObjectURL(file));
-            setCurrentStep(prev => ({ ...prev, image: file }));
+            const updatedStep = { ...currentStep, image: file };
+            setCurrentStep(updatedStep);
+            onStepChange(updatedStep);
         } else{
-            setCurrentStep( (prev)=>({...prev, [name]: value}))
-
+            const updatedStep = { ...currentStep, [name]: value };
+            setCurrentStep(updatedStep);
+            onStepChange(updatedStep);
         }
     }
 

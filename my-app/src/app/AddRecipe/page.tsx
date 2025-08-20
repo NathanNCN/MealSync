@@ -18,8 +18,8 @@ type Ingredient = {
 }
 
 type Step = {
-    description: string,
-    image: string,
+    directions: string,
+    image?: File | null,
 }
 
 type Recipe = {
@@ -34,6 +34,10 @@ type Recipe = {
 export default function AddRecipe() {
     const [ingredients, setIngredients] = useState<number[]>([0]);
     const [steps, setSteps] = useState<number[]>([0]);
+    const [stepsList, setStepsList] = useState<Step[]>([{
+        directions: '',
+        image: null
+    }]);
 
     const [imagePreview, setImagePreview] = useState<string>(``);
     const [ingredientsList, setIngredientsList] = useState<Ingredient[]>([{
@@ -80,9 +84,20 @@ export default function AddRecipe() {
         });
     }
 
+    const handleStepChange = (index: number, step: Step) => {
+        console.log(`Step ${index} changed:`, step);
+        setStepsList(prev => {
+            const updated = [...prev];
+            updated[index] = step;
+            console.log('All steps after update:', updated);
+            return updated;
+        });
+    }
+
     const handleRemoveStep = (indexToRemove: number) => {
         if (steps.length > 1) {
             setSteps(prev => prev.filter((index) => index !== indexToRemove));
+            setStepsList(prev => prev.filter((_, i) => i !== indexToRemove));
         }
     }
 
@@ -90,6 +105,7 @@ export default function AddRecipe() {
     const handleAddStep = () => {
         const lastIndex = steps[steps.length - 1];
         setSteps(prev => [...prev, lastIndex + 1]);
+        setStepsList(prev => [...prev, { directions: '', image: null }]);
         
     }
 
@@ -229,10 +245,52 @@ export default function AddRecipe() {
 
             }
 
-            // Now save steps to table and images to buckets
+            // Insert each step separately
+            for (const [index, step] of stepsList.entries()) {
+                console.log('inserting step')
+                let filePathURL = null;
+
+                //Now going to insert image into step bucket
+                if (step.image && step.image.name) {
+                    const fileExtension = step.image.name.split('.').pop()
+                    const fileName = `${user.data.user.id}/${recipeId}/${Date.now()}.${fileExtension}`
+
+                    console.log('Uploading file with path:', fileName)
+
+                    //insert image to database
+                    const { error: uploadError} = await supaBase.storage.from('stepimages').upload(fileName, step.image)
+                    
+                    if (uploadError){
+                        console.log('Error uploading step image', uploadError)
+                        return
+                    }
+
+                    // Get the public URL for the uploaded image
+                    const { data: { publicUrl } } = supaBase.storage.from('stepimages').getPublicUrl(fileName);
+                    filePathURL = publicUrl;
+                }
+
+                const {error: stepError} = await supaBase
+                    .from('steps')
+                    .insert({
+                        recipe_id: recipeId,
+                        order_number: index + 1,
+                        text: step.directions,
+                        image: filePathURL
+                    });
+                
+
+
+                if (stepError) {
+                    console.error('Error inserting step:', step, stepError);
+                    // Optionally delete the recipe if step insertion fails
+                    await supaBase.from('recipes').delete().eq('id', recipeId);
+                    return;
+                }
+            }
+
 
             
-
 
             
 
@@ -386,6 +444,7 @@ export default function AddRecipe() {
                                     key={value}
                                     stepIndex={index+1}
                                     onRemove={() => handleRemoveStep(value)}
+                                    onStepChange={(step) => handleStepChange(index, step)}
                                 />
                             ))}
                         </div>

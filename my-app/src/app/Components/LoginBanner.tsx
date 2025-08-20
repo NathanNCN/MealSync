@@ -2,50 +2,84 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { FaUtensils, FaShoppingCart, FaChartPie } from 'react-icons/fa';
 
 export default function LoginBanner() {
-    return (
-        <div className="bg-gradient-to-r from-green-50 to-green-100 min-h-screen">
-            <div className="container mx-auto px-4 py-16">
-                <div className="flex items-center justify-between">
-                    {/* Left side content */}
-                    <div className="max-w-xl">
-                        <h1 className="text-5xl font-bold text-green-800 mb-6">
-                            Welcome to MealSync
-                        </h1>
-                        <p className="text-xl text-gray-600 mb-8">
-                            Simplify your meal planning and grocery shopping with smart automation
-                        </p>
-                        <div className="space-y-4 text-gray-600">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <p>Save and organize your favorite recipes</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <p>Automatic grocery list generation</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <p>Smart meal planning with macros tracking</p>
-                            </div>
-                        </div>
-                        <div className="mt-12">
-                            <p className="text-gray-500">
-                                Please login using the button in the navigation bar to get started
-                            </p>
-                        </div>
-                    </div>
+    const features = [
+        {
+            icon: <div className="w-6 h-6 text-green-600"><FaUtensils /></div>,
+            title: "Recipe Management",
+            description: "Save and organize your favorite recipes in one place"
+        },
+        {
+            icon: <div className="w-6 h-6 text-green-600"><FaShoppingCart /></div>,
+            title: "Smart Shopping",
+            description: "Automatic grocery list generation from your meal plans"
+        },
+        {
+            icon: <div className="w-6 h-6 text-green-600"><FaChartPie /></div>,
+            title: "Nutrition Tracking",
+            description: "Track your macros and maintain a balanced diet"
+        }
+    ];
 
-                    {/* Right side image */}
-                    <div className="hidden lg:block">
-                        <img 
-                            src="https://placehold.co/600x400" 
-                            alt="Meal Planning Illustration"
-                            className="w-[500px] h-auto rounded-lg shadow-xl"
-                        />
-                    </div>
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100">
+            <div className="container mx-auto px-4 py-16 min-h-screen flex flex-col justify-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-16"
+                >
+                    <h1 className="text-6xl font-bold text-green-800 mb-6">
+                        Welcome to <span className="text-green-600">MealSync</span>
+                    </h1>
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Your all-in-one solution for meal planning, recipe management, and smart grocery shopping
+                    </p>
+                </motion.div>
+
+                <div className="grid md:grid-cols-3 gap-8 mb-16">
+                    {features.map((feature, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: index * 0.2 }}
+                            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
+                        >
+                            <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                {feature.icon}
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                {feature.title}
+                            </h3>
+                            <p className="text-gray-600">
+                                {feature.description}
+                            </p>
+                        </motion.div>
+                    ))}
                 </div>
+
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.8 }}
+                    className="text-center"
+                >
+                    <div className="inline-block bg-white rounded-lg shadow-md p-6">
+                        <p className="text-gray-700 text-lg mb-4">
+                            Ready to start your journey to better meal planning?
+                        </p>
+                        <p className="text-green-600 font-semibold">
+                            Please log in using the button in the navigation bar above
+                        </p>
+                    </div>
+                </motion.div>
+
+                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-green-100 to-transparent pointer-events-none"></div>
             </div>
         </div>
     );
