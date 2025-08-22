@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import Nav from '../Components/Nav';
 import { createClient } from '@supabase/supabase-js';
 import { FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 import AuthCheck from '../Components/AuthCheck';
 
+// Define the types for the recipes and ingredients
 type Recipe = {
     id: string;
     name: string;
@@ -77,7 +79,7 @@ export default function OrderMeals() {
             return;
         }
 
-        // Combine duplicate ingredients and add quantity control
+        // Combine duplicate ingredients 
         const combinedIngredients = data.reduce((acc: { [key: string]: Ingredient }, curr) => {
             const key = `${curr.name}-${curr.unit}`;
             if (acc[key]) {
@@ -111,6 +113,40 @@ export default function OrderMeals() {
             }
             return ing;
         }));
+    };
+
+    const router = useRouter();
+
+    // Send email with shopping list
+    const sendEmailShoppingList = async () => {
+        // Get user email
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !user.email) {
+            console.error('User not found or missing email');
+            return;
+        }
+
+        // Call POST route to send email with shopping list
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                ingredients: ingredients.map(i => i.name),
+                email: user.email
+             })
+        });
+
+        // Check if email was sent successfully
+        if (response.ok) {
+            console.log('Email sent successfully');
+        } else {
+            console.error('Failed to send email');
+        }
+        // Redirect to home page
+        router.push('/');
+
     };
 
     if (isLoading) {
@@ -184,13 +220,7 @@ export default function OrderMeals() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {availableRecipes.map(recipe => (
                                             <div key={recipe.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                                                {recipe.coverImage && (
-                                                    <img 
-                                                        src={recipe.coverImage} 
-                                                        alt={recipe.name} 
-                                                        className="w-full h-48 object-cover"
-                                                    />
-                                                )}
+                                
                                                 <div className="p-4">
                                                     <h3 className="font-semibold">{recipe.name}</h3>
                                                     <p className="text-sm text-gray-600 mb-4">{recipe.time} • {recipe.difficulty}</p>
@@ -272,8 +302,9 @@ export default function OrderMeals() {
                                 {ingredients.length > 0 && (
                                     <button 
                                         className="mt-8 w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg font-semibold"
+                                        onClick={sendEmailShoppingList}
                                     >
-                                        Proceed to Checkout ({ingredients.filter(i => i.selected).length} items)
+                                       Email me Shopping List!!
                                     </button>
                                 )}
                             </div>

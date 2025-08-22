@@ -5,7 +5,7 @@ import {useRouter} from 'next/navigation';
 import {createClient} from '@supabase/supabase-js';
 import {useState, useEffect, use} from 'react';
 
-
+// Define the types for the recipes
 type Recipe = {
     name: string,
     time: string,
@@ -17,25 +17,31 @@ type Recipe = {
 
 export default function RecipeContainer() {
 
+    // State to track the user's recipes
     const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
 
+    // Create a supabase client
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-      
+
+    // Create a router
     const router = useRouter();
 
-
+    // Use effect to get the user's recipes
     useEffect( () => {
         const getRecipes = async () =>{
             try {
                 const {data: {user}, error: userError} = await supabase.auth.getUser()
 
+                // Check if there is an error
                 if (userError) {
                     console.log("error getting user", userError)
                     return;
                 }
+
+                // Check if the user is not found
                 if (!user) {
                     console.log("Cannot get user")
                     return;
@@ -55,20 +61,18 @@ export default function RecipeContainer() {
                 // Get cover images for each recipe
                 const recipesWithImages = await Promise.all(recipesData.map(async (recipe) => {
                     try {
-                        console.log("HERE USER ID", user.id)
-                        console.log("recipe ID", recipe.id)
+                        // Get the cover image for the recipe
                         const { data: fileList, error: imageError } = await supabase
                             .storage
                             .from('coverimages')
                             .list(`${user.id}/${recipe.id}`)
                         
-                        console.log('files here',fileList)
 
                         if (imageError) {
                             console.log(`Error fetching image for recipe ${recipe.id}:`, imageError);
                             return {
                                 ...recipe,
-                                coverImage: '#' // Fallback image URL
+                                coverImage: '#' 
                             };
                         }
 
@@ -81,12 +85,14 @@ export default function RecipeContainer() {
                             };
                         }
 
+                        // Get the file name
                         const fileName = fileList[0].name;
+
+                        // Get the public URL for the cover image
                         const { data: { publicUrl } } = supabase.storage
                             .from('coverimages')
                             .getPublicUrl(`${user.id}/${recipe.id}/${fileName}`);
 
-                        console.log('Got image URL:', publicUrl);
 
                         return {
                             ...recipe,

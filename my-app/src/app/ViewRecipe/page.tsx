@@ -10,10 +10,11 @@ import { useState, useEffect } from "react";
 import { FaSpinner } from 'react-icons/fa';
 import AuthCheck from '../Components/AuthCheck';
 
+// Types for the recipe data
 
 type nutrition = {
     cals: number,
-    protien: number,  // Note: This matches your state usage
+    protien: number,
     carbs: number,
     fat: number
 }
@@ -26,17 +27,19 @@ type Ingredient = {
 
 type Step = {
     text: string,
-    image?: File | null, // Changed from File to string
+    image?: File | null,
 }
 
 type Recipe = {
     name: string,
     time: string,
     difficulty: "" | "Easy" | "Medium" | "Hard",
-    coverImage: string | null, // Changed from File to string
+    coverImage: string | null, 
 }
 
 export default function ViewRecipe() {
+
+    // States for the recipe data
     const [isLoading, setIsLoading] = useState(true);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -45,6 +48,7 @@ export default function ViewRecipe() {
 
     const [difficultyColor, setDifficultyColor] = useState('');
 
+    // State for the nutrition data
     const [nutritionValues, setNutritionValues] = useState<nutrition>({
         cals: 0,
         protien: 0,
@@ -53,6 +57,7 @@ export default function ViewRecipe() {
 
     });
 
+    // State for the recipe data
     const [recipe, setRecipe] = useState<Recipe>({
         name: '',
         time: '',
@@ -60,24 +65,32 @@ export default function ViewRecipe() {
         coverImage: null,
     });
 
+    // Get the recipe id from the url
     const params = useSearchParams();
     const recipe_id = params.get('id');
 
+    // Supabase client
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
+    // UseEffect to get the recipe data once recipe_id is set
     useEffect(() => {
         const getData = async () => {
             setIsLoading(true);
+
+            // Get the user data
             try {
+
+                // Get the user data
                 const {data: userData, error: userError} = await supabase.auth.getUser();
                 if (userError || !userData.user) {
                     console.error('Error fetching user:', userError);
                     return;
                 }
 
+                // Get the recipe data and update the recipe state
                 const {data: recipeData, error: recipeError} = await supabase.from('recipes').select('*').eq('id', recipe_id).single();
                 if (recipeError) {
                     console.error('Error fetching recipe:', recipeError);
@@ -85,6 +98,7 @@ export default function ViewRecipe() {
                 }
                 setRecipe(recipeData);
 
+                // Get the ingredients data and update the ingredients state
                 const {data: ingredientsData, error: ingredientsError} = await supabase.from('ingredients').select('*').eq('recipe_id', recipe_id);
                 if (ingredientsError) {
                     console.error('Error fetching ingredients:', ingredientsError);
@@ -92,6 +106,7 @@ export default function ViewRecipe() {
                 }
                 setIngredients(ingredientsData);
 
+                // Get the steps data and update the steps state
                 const {data: stepsData, error: stepsError} = await supabase.from('steps').select('*').eq('recipe_id', recipe_id);
                 if (stepsError) {
                     console.error('Error fetching steps:', stepsError);
@@ -99,6 +114,7 @@ export default function ViewRecipe() {
                 }
                 setSteps(stepsData);
 
+                // Get the nutrition data and update the nutrition state
                 const {data: nutritionData, error: nutritionError} = await supabase.from('nutrition').select('*').eq('recipe_id', recipe_id).single();
                 if (nutritionError) {
                     console.error('Error fetching nutrition:', nutritionError);
@@ -111,7 +127,7 @@ export default function ViewRecipe() {
                     fat: nutritionData.fat
                 });
 
-                // Get cover images 
+                // Get cover images from buckets based on user id and recipe id
                 const { data: files } = await supabase.storage
                     .from('coverimages')
                     .list(`${userData.user.id}/${recipe_id}`, {limit: 1});
@@ -133,6 +149,7 @@ export default function ViewRecipe() {
         getData();
     }, [recipe_id]);
 
+    // UseEffect to set the difficulty color based on the difficulty
     useEffect(() => {
         if (recipe.difficulty == 'Easy') {
             setDifficultyColor('text-green-500');

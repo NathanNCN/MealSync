@@ -11,6 +11,7 @@ import { getCals } from '../api/nutrition';
 import { error } from 'console';
 
 
+// Define the types for the ingredients, steps, and recipe
 type Ingredient = {
     name: string,
     amount: number,
@@ -32,6 +33,8 @@ type Recipe = {
 
 
 export default function AddRecipe() {
+
+    // State to track the ingredients, steps and images
     const [ingredients, setIngredients] = useState<number[]>([0]);
     const [steps, setSteps] = useState<number[]>([0]);
     const [stepsList, setStepsList] = useState<Step[]>([{
@@ -39,6 +42,7 @@ export default function AddRecipe() {
         image: null
     }]);
 
+    // State to track the image preview
     const [imagePreview, setImagePreview] = useState<string>(``);
     const [ingredientsList, setIngredientsList] = useState<Ingredient[]>([{
         name: '',
@@ -46,7 +50,7 @@ export default function AddRecipe() {
         unit: "g"
     }]);
 
-
+    // State to track the recipe cover details
     const [recipe, setRecipe] = useState<Recipe>({
         name: "",
         time: "",
@@ -56,13 +60,15 @@ export default function AddRecipe() {
 
     });
     
+    // Function to add a new ingredient
     const handleAddIngredient = () => {
         const lastIndex = ingredients[ingredients.length - 1];
         setIngredients(prev => [...prev, lastIndex + 1]);
         setIngredientsList(prev => [...prev, { name: '', amount: 0, unit: "g" }]);
         console.log('Added new ingredient');
     }
-    
+
+    // Function to remove an ingredient
     const handleRemoveIngredient = (indexToRemove: number) => {
         if (ingredients.length > 1) {
             // Find the position of the indexToRemove in the ingredients array
@@ -74,6 +80,7 @@ export default function AddRecipe() {
         }
     }
 
+    // Function to handle ingredient changes
     const handleIngredientChange = (index: number, ingredient: Ingredient) => {
         console.log(`Ingredient ${index} changed:`, ingredient);
         setIngredientsList(prev => {
@@ -84,6 +91,7 @@ export default function AddRecipe() {
         });
     }
 
+    // Function to handle step changes
     const handleStepChange = (index: number, step: Step) => {
         console.log(`Step ${index} changed:`, step);
         setStepsList(prev => {
@@ -94,6 +102,7 @@ export default function AddRecipe() {
         });
     }
 
+    // Function to remove a step
     const handleRemoveStep = (indexToRemove: number) => {
         if (steps.length > 1) {
             setSteps(prev => prev.filter((index) => index !== indexToRemove));
@@ -101,7 +110,7 @@ export default function AddRecipe() {
         }
     }
 
-   
+    // Function to add a new step
     const handleAddStep = () => {
         const lastIndex = steps[steps.length - 1];
         setSteps(prev => [...prev, lastIndex + 1]);
@@ -110,6 +119,7 @@ export default function AddRecipe() {
     }
 
 
+    // Function to handle changes in the recipe details
     const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
         const {name, value} = e.target;
         if (name == `coverImage` && e.target instanceof HTMLInputElement && e.target.files) {
@@ -124,15 +134,13 @@ export default function AddRecipe() {
         }
     }
 
-    
-
+    // Create a supabase client
     const supaBase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! 
     );
 
-
-
+    // Function to handle the submission of the recipe
     const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!recipe.coverImage) {
@@ -145,6 +153,7 @@ export default function AddRecipe() {
             ing.name.trim() !== '' && ing.amount > 0
         );
 
+        // Check if there are any ingredients
         if (validIngredients.length === 0) {
             alert('Please add at least one ingredient');
             return;
@@ -155,8 +164,10 @@ export default function AddRecipe() {
             ingredients: validIngredients
         });
 
+        // Get the user
         const user = await supaBase.auth.getUser();
 
+        // Check if the user is authenticated
         if (!user.data.user) {
             console.error('User not authenticated');
             return;
@@ -299,7 +310,6 @@ export default function AddRecipe() {
         }
     }
 
-    const router = useRouter();
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">

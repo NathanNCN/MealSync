@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "@supabase/supabase-js": "^2.53.0",
-    "react-icons": "^5.5.0"
+    "framer-motion": "^12.23.12",
+    "react-icons": "^5.5.0",
+    "resend": "^6.0.1"
   }
 }
